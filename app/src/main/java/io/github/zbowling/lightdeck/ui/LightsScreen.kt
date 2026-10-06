@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -40,6 +42,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.zbowling.lightdeck.ha.ConnectionStatus
@@ -49,18 +54,22 @@ import io.github.zbowling.lightdeck.ha.Room
 import kotlin.math.roundToInt
 
 private val ColorPresets = listOf(
-    Rgb(255, 183, 76), // warm white
-    Rgb(255, 244, 229), // cool white
-    Rgb(255, 40, 30),
-    Rgb(255, 128, 0),
-    Rgb(40, 220, 80),
-    Rgb(30, 110, 255),
-    Rgb(150, 60, 255),
-    Rgb(255, 60, 160),
+    "Warm white" to Rgb(255, 183, 76),
+    "Cool white" to Rgb(255, 244, 229),
+    "Red" to Rgb(255, 40, 30),
+    "Orange" to Rgb(255, 128, 0),
+    "Green" to Rgb(40, 220, 80),
+    "Blue" to Rgb(30, 110, 255),
+    "Purple" to Rgb(150, 60, 255),
+    "Pink" to Rgb(255, 60, 160),
 )
+
+// Meta's design requirements: 48dp minimum targets, 60dp for primary controls.
+private val PrimaryControlHeight = 60.dp
 
 private fun Rgb.toColor() = Color(r, g, b)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LightsScreen(
     status: ConnectionStatus,
@@ -73,14 +82,16 @@ fun LightsScreen(
     onRetry: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        // Wraps instead of clipping when the panel is narrow (down to 360dp).
+        FlowRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Lights", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
             StatusLabel(status)
-            Spacer(Modifier.width(16.dp))
-            OutlinedButton(onClick = onEditServer, modifier = Modifier.heightIn(min = 56.dp)) {
+            OutlinedButton(onClick = onEditServer, modifier = Modifier.heightIn(min = PrimaryControlHeight)) {
                 Text("Server")
             }
         }
@@ -100,7 +111,7 @@ fun LightsScreen(
             rooms.isEmpty() -> Message("Connecting to Home Assistant…")
             else -> LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 300.dp),
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -147,26 +158,28 @@ private fun Message(text: String, action: String? = null, onAction: () -> Unit =
         Text(text, style = MaterialTheme.typography.titleMedium)
         if (action != null) {
             Spacer(Modifier.size(16.dp))
-            Button(onClick = onAction, modifier = Modifier.heightIn(min = 56.dp)) { Text(action) }
+            Button(onClick = onAction, modifier = Modifier.heightIn(min = PrimaryControlHeight)) { Text(action) }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RoomHeader(room: Room, onRoomPower: (Room, Boolean) -> Unit) {
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         Text(room.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-        FilledTonalButton(onClick = { onRoomPower(room, true) }, modifier = Modifier.heightIn(min = 56.dp)) {
+        FilledTonalButton(onClick = { onRoomPower(room, true) }, modifier = Modifier.heightIn(min = PrimaryControlHeight)) {
             Text("All on")
         }
         OutlinedButton(
             onClick = { onRoomPower(room, false) },
             enabled = room.anyOn,
-            modifier = Modifier.heightIn(min = 56.dp),
+            modifier = Modifier.heightIn(min = PrimaryControlHeight),
         ) {
             Text("All off")
         }
@@ -183,12 +196,20 @@ private fun LightTile(
 ) {
     val glow = if (light.isOn) light.rgb?.toColor() ?: Amber else MaterialTheme.colorScheme.surfaceVariant
     ElevatedCard(Modifier.fillMaxWidth().alpha(if (light.isAvailable) 1f else 0.5f)) {
-        // The whole header row is one big pinch target.
+        // The header row is a single toggle target. Its Switch only shows state, so
+        // Look and Pinch sees one interactable element and the system hover highlight
+        // follows the row's rounded shape.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 88.dp)
-                .clickable(enabled = light.isAvailable, onClick = onToggle)
+                .clip(RoundedCornerShape(12.dp))
+                .toggleable(
+                    value = light.isOn,
+                    enabled = light.isAvailable,
+                    role = Role.Switch,
+                    onValueChange = { onToggle() },
+                )
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -203,7 +224,7 @@ private fun LightTile(
                 )
                 Text(stateLabel(light), style = MaterialTheme.typography.bodyMedium)
             }
-            Switch(checked = light.isOn, onCheckedChange = { onToggle() }, enabled = light.isAvailable)
+            Switch(checked = light.isOn, onCheckedChange = null, enabled = light.isAvailable)
         }
 
         if (light.isAvailable && light.supportsBrightness) {
@@ -215,7 +236,9 @@ private fun LightTile(
                 onValueChange = { dragged = it },
                 onValueChangeFinished = { dragged?.let { onBrightness(it.roundToInt()) } },
                 valueRange = 0f..100f,
-                modifier = Modifier.padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .semantics { contentDescription = "${light.name} brightness" },
             )
         }
 
@@ -225,13 +248,14 @@ private fun LightTile(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                ColorPresets.forEach { preset ->
+                ColorPresets.forEach { (name, preset) ->
                     Box(
                         Modifier
-                            .size(44.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(preset.toColor())
-                            .clickable { onColor(preset) },
+                            .clickable(onClickLabel = "Set ${light.name} to $name") { onColor(preset) }
+                            .semantics { contentDescription = name },
                     )
                 }
             }

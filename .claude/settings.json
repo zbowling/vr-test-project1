@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "meta-vr": {
+      "source": {
+        "source": "github",
+        "repo": "meta-quest/agentic-tools"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "meta-vr@meta-vr": true
+  }
+}

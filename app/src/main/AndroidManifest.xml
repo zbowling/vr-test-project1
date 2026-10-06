@@ -1,17 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:horizonos="http://schemas.horizonos/sdk"
+    xmlns:metavr="http://schemas.meta.com/metavr-sdk">
+
+    <!--
+        Horizon OS SDK levels are separate from Android API levels. The minimum keeps
+        the app installable on older Horizon OS releases; the target opts into
+        Horizon OS behavior through v207 (the release that adds Meta VR Glasses).
+        The legacy element is still accepted and must carry the same levels.
+    -->
+    <metavr:uses-metavr-sdk
+        metavr:minSdkVersion="69"
+        metavr:targetSdkVersion="207" />
+    <horizonos:uses-horizonos-sdk
+        horizonos:minSdkVersion="69"
+        horizonos:targetSdkVersion="207" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!--
-        Meta VR Glasses ship without controllers and use look-and-pinch, and the
-        Horizon Store lists hand-tracked apps first for people without controllers.
-        required="false" keeps the app available to Quest owners on controllers too.
+        No hand or eye tracking permissions: for 2D panel apps Horizon OS handles
+        hands, controllers and Look and Pinch itself and sends standard touch events.
+        Requesting eye tracking permissions fails the Look and Pinch review.
     -->
-    <uses-feature
-        android:name="oculus.software.handtracking"
-        android:required="false" />
-    <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
 
     <application
         android:allowBackup="false"
@@ -20,17 +31,30 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.LightDeck">
 
+        <meta-data
+            android:name="com.oculus.supportedDevices"
+            android:value="quest2|questpro|quest3|quest3s|vrglasses" />
+
+        <!-- Keep the activity alive while the panel is resized or rescaled for gaze. -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="density|keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="true"
-            android:launchMode="singleTop">
-            <!-- Initial size of the floating 2D panel on Horizon OS. -->
+            android:launchMode="singleTop"
+            android:resizeableActivity="true">
+            <!--
+                Meta's default panel size. Look and Pinch may shrink the window to fit
+                the field of view, so the layout must work down to 360dp wide.
+            -->
             <layout
-                android:defaultWidth="1100dp"
-                android:defaultHeight="720dp" />
+                android:defaultWidth="1024dp"
+                android:defaultHeight="640dp"
+                android:minWidth="360dp"
+                android:minHeight="225dp" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.oculus.intent.category.2D" />
             </intent-filter>
         </activity>
     </application>
