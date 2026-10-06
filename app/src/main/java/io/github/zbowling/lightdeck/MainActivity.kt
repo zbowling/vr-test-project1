@@ -22,8 +22,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Typing a long token on a headset keyboard is tedious, so debug builds accept it over adb:
-     * adb shell am start -n io.github.zbowling.lightdeck/.MainActivity \
+     * Typing a long token on a headset keyboard is tedious, so debug builds accept it at launch:
+     * metavr adb shell am start -n io.github.zbowling.lightdeck/.MainActivity \
      *   --es ha_url http://homeassistant.local:8123 --es ha_token <token>
      */
     private fun applyDebugServerExtras(intent: Intent) {

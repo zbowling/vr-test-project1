@@ -65,17 +65,22 @@ CI (`.github/workflows/build.yml`) runs both and uploads the debug APK.
 
 ## Run on a headset
 
-1. Enable developer mode on the Quest (Meta Horizon phone app → Devices → Developer mode).
-2. Install with [Meta Quest Developer Hub](https://developers.meta.com/horizon/documentation/android-apps/meta-quest-developer-hub/)
-   or `adb install app/build/outputs/apk/debug/app-debug.apk`.
-3. Open **Light Deck** from the app library (Unknown sources).
-4. Pick your server or type its address, and paste a long-lived access token
+1. Enable developer mode on the headset (Meta Horizon phone app → Devices → Developer mode).
+2. Install and launch with the [Meta VR CLI](#ai-agent-tooling):
+
+   ```sh
+   metavr device list
+   metavr app install --replace app/build/outputs/apk/debug/app-debug.apk
+   metavr app launch io.github.zbowling.lightdeck
+   ```
+
+3. Pick your server or type its address, and paste a long-lived access token
    (Home Assistant → your profile → Security → Long-lived access tokens).
 
-Typing a token on a headset keyboard is slow. Debug builds accept it over adb:
+Typing a token on a headset keyboard is slow. Debug builds accept it on launch:
 
 ```sh
-adb shell am start -n io.github.zbowling.lightdeck/.MainActivity \
+metavr adb shell am start -n io.github.zbowling.lightdeck/.MainActivity \
   --es ha_url http://homeassistant.local:8123 --es ha_token "$HA_TOKEN"
 ```
 
