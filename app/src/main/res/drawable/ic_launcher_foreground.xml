@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A light bulb, centered in the 72dp safe zone of the 108dp adaptive icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFC107"
+        android:pathData="M54,30C44.06,30 36,38.06 36,48C36,54.6 39.56,60.36 44.86,63.48L46,64.16V70H62V64.16L63.14,63.48C68.44,60.36 72,54.6 72,48C72,38.06 63.94,30 54,30Z" />
+    <path
+        android:fillColor="#FFE0E0E0"
+        android:pathData="M46,73H62V77H46ZM48,80H60L58,84H50Z" />
+</vector>

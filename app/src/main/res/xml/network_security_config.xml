@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Most Home Assistant installs are reached over plain http on the home network
+    (http://homeassistant.local:8123), so cleartext has to be allowed. The setup
+    screen warns when an http:// address is used.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

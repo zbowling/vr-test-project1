@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        Meta VR Glasses ship without controllers and use look-and-pinch, and the
+        Horizon Store lists hand-tracked apps first for people without controllers.
+        required="false" keeps the app available to Quest owners on controllers too.
+    -->
+    <uses-feature
+        android:name="oculus.software.handtracking"
+        android:required="false" />
+    <uses-permission android:name="com.oculus.permission.HAND_TRACKING" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.LightDeck">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <!-- Initial size of the floating 2D panel on Horizon OS. -->
+            <layout
+                android:defaultWidth="1100dp"
+                android:defaultHeight="720dp" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
