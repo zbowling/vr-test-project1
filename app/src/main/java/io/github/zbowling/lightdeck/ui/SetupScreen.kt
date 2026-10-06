@@ -102,7 +102,6 @@ fun SetupScreen(
                     label = "Connect",
                     onClick = { onConnect(address, token) },
                     style = ButtonStyle.Primary,
-                    leadingIcon = icon { Icons.Regular.Wifi },
                 )
                 // Horizon OS has no system back button for every input method, so the
                 // way out of this screen is an explicit button.
