@@ -1,4 +1,4 @@
-package io.github.zbowling.lightdeck
+package io.github.zbowling.lightdeck.data
 
 import android.content.Context
 import android.net.nsd.NsdManager

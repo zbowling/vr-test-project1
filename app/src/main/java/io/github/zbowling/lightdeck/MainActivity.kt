@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import io.github.zbowling.lightdeck.ui.LightDeckApp
-import io.github.zbowling.lightdeck.ui.LightDeckTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel: LightsViewModel by viewModels()
@@ -14,11 +13,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) applyDebugServerExtras(intent)
-        setContent {
-            LightDeckTheme {
-                LightDeckApp(viewModel)
-            }
-        }
+        setContent { LightDeckApp(viewModel) }
     }
 
     override fun onNewIntent(intent: Intent) {

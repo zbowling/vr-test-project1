@@ -6,6 +6,8 @@ Android (Kotlin + Compose) 2D panel app; no Spatial SDK.
 - `ha-client/`: JVM-only Home Assistant WebSocket client. Test with
   `./gradlew -p ha-client test` (no Android SDK needed).
 - `app/`: the Android app. Build with `./gradlew :app:assembleDebug`; CI builds the APK.
+  UI uses the Meta VR UI Set (`metavrx.uiset.compose.*`), not Material 3. Don't mix
+  the two; follow the `hz-metavrx-ui-set` skill and Meta's GalleryVrx sample for APIs.
 
 ## Working on Horizon OS code
 

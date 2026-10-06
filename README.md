@@ -32,8 +32,10 @@ agent skills:
 | Launch as a 2D window | `com.oculus.intent.category.2D` |
 | No eye tracking permissions (Look and Pinch review) | none requested; no hand-tracking permission either, since the system handles input for 2D apps |
 | Compose UI 1.10+ so the system can infer gaze targets | Compose BOM 2026.03.00 (UI 1.10.5) |
-| One interactable element per logical control, with a shape for the system hover | light header row is a single `toggleable`, clipped to a rounded shape; its `Switch` is display-only |
-| 48dp minimum targets, 60dp for primary controls | color swatches 48dp; buttons 60dp+ |
+| Horizon OS look, hover/press feedback and 48dp targets | [Meta VR UI Set](https://developers.meta.com/horizon/documentation/android-apps/meta-vr-ui-set-sdk) (`UiSetTheme`, cards, buttons, `Switch`, `Slider`, `TextField`, `Icons.Regular`) instead of Material 3 |
+| One interactable element per logical control, with a shape for the system hover | light header row is a single `toggleable` clipped to the card shape; its `Switch` is display-only; servers are clickable cards |
+| 48dp minimum targets with space between them | color swatches 48dp with 12dp gaps; UI Set clamps its own targets to 48dp |
+| In-app back navigation | "Back" button on the server screen |
 | No hover-dependent flows | everything is click-based |
 | Android `minSdk` ≥ 29, `targetSdk` 34 for 2D panel apps, arm64 | `app/build.gradle.kts` |
 
@@ -42,7 +44,9 @@ agent skills:
 | Path | What it is |
 | --- | --- |
 | `ha-client/` | Plain Kotlin/JVM Home Assistant WebSocket client (`HaSession`) and live light model (`LightRepository`). No Android dependency, fully unit tested. |
-| `app/` | Android app: Compose UI, ViewModel, settings, mDNS discovery. |
+| `app/.../ui/` | Screens and components built on the Meta VR UI Set. `LightTile.kt` is the reference Look and Pinch component. |
+| `app/.../data/` | Encrypted settings and mDNS server discovery. |
+| `app/.../LightsViewModel.kt`, `MainActivity.kt` | App state and the single activity. |
 | `gradle/libs.versions.toml` | Dependency versions shared by both builds. |
 
 `ha-client` is a separate Gradle build pulled into the app with `includeBuild`,
@@ -79,6 +83,24 @@ Meta VR Glasses hardware ships in spring 2027. Until then, test on a Quest with
 controllers put down (hands only) or in the
 [Meta Spatial Simulator](https://developers.meta.com/vr/documentation/android-apps/spatial-sim-overview/).
 
+## Using this as a template
+
+Light Deck is meant as a small, canonical Standard Android app for Meta VR Glasses
+and Quest. To start your own app from it:
+
+1. Change `namespace`/`applicationId` in `app/build.gradle.kts` before the first install.
+2. Keep the manifest block as is: supported devices (with `vrglasses`), Horizon OS SDK
+   levels, `<layout>` sizes, `resizeableActivity`, `configChanges`, the 2D category,
+   and no eye tracking permissions.
+3. Build UI from UI Set components inside `UiSetTheme`, paint the panel with
+   `UiSetTheme.colorScheme.background.container.brush`, and use the theme's
+   typography roles and spacing scale.
+4. Give each logical control exactly one interactable element, clipped to its visual
+   shape (see `LightTile.kt`); pass `null` callbacks to nested controls that only
+   display state.
+5. Check layouts from 360dp to 1280dp wide, and check gaze targets with Meta Spatial
+   Simulator's **Show Interactive Elements**.
+
 ## AI agent tooling
 
 Meta publishes official agent tooling for Horizon OS development:
@@ -111,8 +133,6 @@ tile, swatch, slider and button is detected as a gaze target.
 ## Roadmap
 
 - **Sign in with Home Assistant** (OAuth2 login flow) so nobody has to paste tokens.
-- **Meta VR UI Set** (`com.meta.metavrx.uiset:uiset-compose-compat` via the MetaVRX
-  BOM) in place of Material 3, for native Horizon OS styling and hover shapes.
 - **Spatial windows** with the [Meta VR Layout SDK](https://developers.meta.com/horizon/documentation/android-apps/meta-vr-layout-sdk):
   per-room control windows placed around the main panel, staying on the Standard
   Android path.

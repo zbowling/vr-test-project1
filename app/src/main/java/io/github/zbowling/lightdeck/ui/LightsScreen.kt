@@ -1,73 +1,34 @@
 package io.github.zbowling.lightdeck.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.zbowling.lightdeck.ha.ConnectionStatus
 import io.github.zbowling.lightdeck.ha.Light
 import io.github.zbowling.lightdeck.ha.Rgb
 import io.github.zbowling.lightdeck.ha.Room
-import kotlin.math.roundToInt
-
-private val ColorPresets = listOf(
-    "Warm white" to Rgb(255, 183, 76),
-    "Cool white" to Rgb(255, 244, 229),
-    "Red" to Rgb(255, 40, 30),
-    "Orange" to Rgb(255, 128, 0),
-    "Green" to Rgb(40, 220, 80),
-    "Blue" to Rgb(30, 110, 255),
-    "Purple" to Rgb(150, 60, 255),
-    "Pink" to Rgb(255, 60, 160),
-)
-
-// Meta's design requirements: 48dp minimum targets, 60dp for primary controls.
-private val PrimaryControlHeight = 60.dp
-
-private fun Rgb.toColor() = Color(r, g, b)
+import metavrx.uiset.compose.Icon
+import metavrx.uiset.compose.Text
+import metavrx.uiset.compose.button.ButtonStyle
+import metavrx.uiset.compose.button.IconButton
+import metavrx.uiset.compose.button.LabelButton
+import metavrx.uiset.compose.theme.UiSetTheme
+import metavrx.uiset.compose.theme.icons.Icons
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -81,39 +42,56 @@ fun LightsScreen(
     onEditServer: () -> Unit,
     onRetry: () -> Unit,
 ) {
+    val spacing = UiSetTheme.dimensions.spacing
     Column(Modifier.fillMaxSize()) {
-        // Wraps instead of clipping when the panel is narrow (down to 360dp).
+        // Wraps instead of clipping when the window is narrow (down to 360dp).
         FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.twoXLarge, vertical = spacing.large),
+            horizontalArrangement = Arrangement.spacedBy(spacing.large),
+            verticalArrangement = Arrangement.spacedBy(spacing.small),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Lights", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            StatusLabel(status)
-            OutlinedButton(onClick = onEditServer, modifier = Modifier.heightIn(min = PrimaryControlHeight)) {
-                Text("Server")
-            }
+            Text("Lights", style = UiSetTheme.typography.display, modifier = Modifier.weight(1f))
+            StatusBadge(status)
+            IconButton(
+                icon = icon { Icons.Regular.Settings },
+                onClick = onEditServer,
+                contentDescription = "Server settings",
+                style = ButtonStyle.Secondary,
+            )
         }
 
         when {
-            status is ConnectionStatus.AuthFailed -> Message(
-                text = "Home Assistant rejected the access token: ${status.message}",
+            status is ConnectionStatus.AuthFailed -> CenteredMessage(
+                title = "Home Assistant rejected the access token",
+                body = status.message,
                 action = "Update token",
                 onAction = onEditServer,
             )
-            rooms.isEmpty() && status is ConnectionStatus.Connected -> Message("No lights found in Home Assistant.")
-            rooms.isEmpty() && status is ConnectionStatus.Retrying -> Message(
-                text = "Can't reach Home Assistant: ${status.message}",
+            rooms.isEmpty() && status is ConnectionStatus.Connected -> CenteredMessage(
+                title = "No lights found",
+                body = "Lights you add in Home Assistant show up here automatically.",
+            )
+            rooms.isEmpty() && status is ConnectionStatus.Retrying -> CenteredMessage(
+                title = "Can't reach Home Assistant",
+                body = status.message,
                 action = "Retry now",
                 onAction = onRetry,
             )
-            rooms.isEmpty() -> Message("Connecting to Home Assistant…")
+            rooms.isEmpty() -> CenteredMessage(title = "Connecting to Home Assistant…")
             else -> LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 300.dp),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                // 320dp columns: one column at the 360dp minimum window width,
+                // three at the 1024dp default.
+                columns = GridCells.Adaptive(minSize = 320.dp),
+                contentPadding = PaddingValues(
+                    start = spacing.twoXLarge,
+                    end = spacing.twoXLarge,
+                    bottom = spacing.twoXLarge,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(spacing.large),
+                verticalArrangement = Arrangement.spacedBy(spacing.large),
             ) {
                 rooms.forEach { room ->
                     item(key = "room:${room.area?.id}", span = { GridItemSpan(maxLineSpan) }) {
@@ -134,140 +112,56 @@ fun LightsScreen(
 }
 
 @Composable
-private fun StatusLabel(status: ConnectionStatus) {
-    val (text, color) = when (status) {
-        is ConnectionStatus.Connected -> "Connected" to Color(0xFF66BB6A)
-        ConnectionStatus.Connecting -> "Connecting…" to MaterialTheme.colorScheme.secondary
-        is ConnectionStatus.Retrying -> "Reconnecting…" to Color(0xFFFFA726)
-        is ConnectionStatus.AuthFailed -> "Token rejected" to MaterialTheme.colorScheme.error
+private fun StatusBadge(status: ConnectionStatus) {
+    val colors = UiSetTheme.colorScheme
+    val (label, iconTint) = when (status) {
+        is ConnectionStatus.Connected -> "Connected" to colors.positive.content
+        ConnectionStatus.Connecting -> "Connecting…" to colors.background.content.icon
+        is ConnectionStatus.Retrying -> "Reconnecting…" to colors.warning.content
+        is ConnectionStatus.AuthFailed -> "Token rejected" to colors.negative.content
     }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(12.dp).clip(CircleShape).background(color))
-        Spacer(Modifier.width(8.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-@Composable
-private fun Message(text: String, action: String? = null, onAction: () -> Unit = {}) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(UiSetTheme.dimensions.spacing.small),
     ) {
-        Text(text, style = MaterialTheme.typography.titleMedium)
-        if (action != null) {
-            Spacer(Modifier.size(16.dp))
-            Button(onClick = onAction, modifier = Modifier.heightIn(min = PrimaryControlHeight)) { Text(action) }
-        }
+        Icon(
+            imageVector = when (status) {
+                is ConnectionStatus.Connected -> Icons.Regular.CheckCircle
+                ConnectionStatus.Connecting -> Icons.Regular.Refresh
+                is ConnectionStatus.Retrying -> Icons.Regular.Warning
+                is ConnectionStatus.AuthFailed -> Icons.Regular.ErrorCircle
+            },
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = iconTint,
+        )
+        Text(label, style = UiSetTheme.typography.body)
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RoomHeader(room: Room, onRoomPower: (Room, Boolean) -> Unit) {
+    val spacing = UiSetTheme.dimensions.spacing
     FlowRow(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = spacing.small),
+        horizontalArrangement = Arrangement.spacedBy(spacing.medium),
+        verticalArrangement = Arrangement.spacedBy(spacing.small),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(room.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-        FilledTonalButton(onClick = { onRoomPower(room, true) }, modifier = Modifier.heightIn(min = PrimaryControlHeight)) {
-            Text("All on")
-        }
-        OutlinedButton(
+        Text(room.name, style = UiSetTheme.typography.headline, modifier = Modifier.weight(1f))
+        LabelButton(
+            label = "All on",
+            onClick = { onRoomPower(room, true) },
+            style = ButtonStyle.Secondary,
+            leadingIcon = icon { Icons.Regular.BrightnessOn },
+        )
+        LabelButton(
+            label = "All off",
             onClick = { onRoomPower(room, false) },
+            style = ButtonStyle.Bordered,
+            leadingIcon = icon { Icons.Regular.BrightnessOff },
             enabled = room.anyOn,
-            modifier = Modifier.heightIn(min = PrimaryControlHeight),
-        ) {
-            Text("All off")
-        }
+        )
     }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LightTile(
-    light: Light,
-    onToggle: () -> Unit,
-    onBrightness: (Int) -> Unit,
-    onColor: (Rgb) -> Unit,
-) {
-    val glow = if (light.isOn) light.rgb?.toColor() ?: Amber else MaterialTheme.colorScheme.surfaceVariant
-    ElevatedCard(Modifier.fillMaxWidth().alpha(if (light.isAvailable) 1f else 0.5f)) {
-        // The header row is a single toggle target. Its Switch only shows state, so
-        // Look and Pinch sees one interactable element and the system hover highlight
-        // follows the row's rounded shape.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 88.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .toggleable(
-                    value = light.isOn,
-                    enabled = light.isAvailable,
-                    role = Role.Switch,
-                    onValueChange = { onToggle() },
-                )
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(Modifier.size(40.dp).clip(CircleShape).background(glow))
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    light.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(stateLabel(light), style = MaterialTheme.typography.bodyMedium)
-            }
-            Switch(checked = light.isOn, onCheckedChange = null, enabled = light.isAvailable)
-        }
-
-        if (light.isAvailable && light.supportsBrightness) {
-            // Hold the dragged value until Home Assistant reports the light's new state.
-            var dragged by remember(light.entityId) { mutableStateOf<Float?>(null) }
-            LaunchedEffect(light) { dragged = null }
-            Slider(
-                value = dragged ?: (light.brightnessPct ?: 0).toFloat(),
-                onValueChange = { dragged = it },
-                onValueChangeFinished = { dragged?.let { onBrightness(it.roundToInt()) } },
-                valueRange = 0f..100f,
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .semantics { contentDescription = "${light.name} brightness" },
-            )
-        }
-
-        if (light.isAvailable && light.supportsColor) {
-            FlowRow(
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                ColorPresets.forEach { (name, preset) ->
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(preset.toColor())
-                            .clickable(onClickLabel = "Set ${light.name} to $name") { onColor(preset) }
-                            .semantics { contentDescription = name },
-                    )
-                }
-            }
-        } else {
-            Spacer(Modifier.size(8.dp))
-        }
-    }
-}
-
-private fun stateLabel(light: Light): String = when {
-    !light.isAvailable -> "Unavailable"
-    light.isOn && light.brightnessPct != null -> "On · ${light.brightnessPct}%"
-    light.isOn -> "On"
-    else -> "Off"
 }

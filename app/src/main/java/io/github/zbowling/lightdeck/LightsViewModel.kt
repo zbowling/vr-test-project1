@@ -3,6 +3,10 @@ package io.github.zbowling.lightdeck
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.zbowling.lightdeck.data.DiscoveredServer
+import io.github.zbowling.lightdeck.data.ServerConfig
+import io.github.zbowling.lightdeck.data.ServerDiscovery
+import io.github.zbowling.lightdeck.data.SettingsStore
 import io.github.zbowling.lightdeck.ha.ConnectionStatus
 import io.github.zbowling.lightdeck.ha.HaSession
 import io.github.zbowling.lightdeck.ha.HaUrls

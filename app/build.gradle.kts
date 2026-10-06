@@ -59,9 +59,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.kotlinx.coroutines.android)
+    // Meta VR UI Set: Horizon OS typography, colors, icons and components with
+    // Look and Pinch-ready targets and hover shapes. Replaces Material 3.
+    implementation(platform(libs.metavrx.bom))
+    implementation(libs.metavrx.uiset.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.material3)
     debugImplementation(libs.compose.ui.tooling)
 }

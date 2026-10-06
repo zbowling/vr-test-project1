@@ -9,6 +9,8 @@ composeBom = "2026.03.00"
 activityCompose = "1.10.1"
 lifecycle = "2.9.2"
 coreKtx = "1.16.0"
+# Meta VR SDKs for Android, validated against each other (supplies the UI Set version).
+metavrxBom = "1.2026.0.0"
 junit = "4.13.2"
 
 [libraries]
@@ -20,7 +22,9 @@ compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeB
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+metavrx-bom = { module = "com.meta.metavrx:metavrx-bom", version.ref = "metavrxBom" }
+metavrx-uiset-compose = { module = "com.meta.metavrx.uiset:uiset-compose-compat" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
