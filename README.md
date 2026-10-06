@@ -108,6 +108,10 @@ and Quest. To start your own app from it:
 
 ## AI agent tooling
 
+Setting up a Claude Code cloud environment for this kind of project (network
+allowlist, allow rules, SessionStart hook, starter prompt):
+[docs/CLOUD_AGENT_SETUP.md](docs/CLOUD_AGENT_SETUP.md).
+
 Meta publishes official agent tooling for Horizon OS development:
 
 - **Meta VR CLI (`metavr`)**: device and app management, Meta Spatial Simulator,
