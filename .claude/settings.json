@@ -9,5 +9,32 @@
   },
   "enabledPlugins": {
     "meta-vr@meta-vr": true
+  },
+  "env": {
+    "NODE_USE_ENV_PROXY": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(metavr *)",
+      "Bash(npx -y metavr *)",
+      "Bash(npx -y metavr@latest *)",
+      "Bash(./gradlew *)",
+      "Bash(sdkmanager *)",
+      "Bash(adb *)",
+      "Bash(git clone https://github.com/meta-quest/*)",
+      "WebFetch(domain:developers.meta.com)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
   }
 }

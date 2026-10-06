@@ -11,7 +11,8 @@ fi
 cd "$CLAUDE_PROJECT_DIR"
 
 SDK="${ANDROID_HOME:-$HOME/android-sdk}"
-# Same command-line tools build that `metavr tools list` installs.
+# Same command-line tools build that `metavr tools list` installs. Build-tools
+# 35.0.0 is what AGP 8.13 uses; platform 36 matches compileSdk.
 CMDLINE_TOOLS_VERSION=11076708
 SDKMANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
 
@@ -40,7 +41,7 @@ set +o pipefail
 yes | "$SDKMANAGER" --sdk_root="$SDK" --licenses >/dev/null
 set -o pipefail
 "$SDKMANAGER" --sdk_root="$SDK" --install \
-  "platform-tools" "platforms;android-36" "build-tools;36.0.0" >/dev/null
+  "platform-tools" "platforms;android-36" "build-tools;35.0.0" >/dev/null
 
 export ANDROID_HOME="$SDK"
 export ANDROID_SDK_ROOT="$SDK"
@@ -58,6 +59,19 @@ export ANDROID_SDK_ROOT="$SDK"
 # Fetch metavr's native binary once so the first real command is fast.
 npx -y metavr@latest --version >/dev/null 2>&1 || echo "metavr warm-up failed; run 'npx -y metavr@latest doctor'" >&2
 
-# Download Gradle and all dependencies, and compile both modules.
-./gradlew --quiet -p ha-client testClasses
-./gradlew --quiet :app:assembleDebug
+# Download Gradle and all dependencies, and compile both modules. Maven Central
+# rate-limits shared cloud IPs (HTTP 429), so retry with backoff; Gradle keeps
+# what it already downloaded between attempts.
+retry() {
+  local attempt
+  for attempt in 1 2 3 4; do
+    if "$@"; then
+      return 0
+    fi
+    echo "Attempt $attempt failed: $*; retrying in $((attempt * 20))s" >&2
+    sleep $((attempt * 20))
+  done
+  "$@"
+}
+retry ./gradlew --quiet -p ha-client testClasses
+retry ./gradlew --quiet :app:assembleDebug
